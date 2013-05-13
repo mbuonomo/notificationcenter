@@ -52,7 +52,7 @@
 						<p>It's really easy to show the center. The plugin create a panel on the right side of your website.</p>
 					</div>
 					<div class="span4">
-						<p><a class="btn slideit" href="#">Give it a try</a></p>
+						<p><a class="btn slideit" href="#">Display the panel on the right</a></p>
 					</div>
 				</div>
 			</div>
@@ -96,6 +96,8 @@
 					</p>
 				</blockquote>
 				<p>For example purpose we will shoot some notification via php using a curl request on the nodejs server every 15 minutes</p>
+				<small>For the moment it's a dummy countdown in javascript but it will be updated soon</small>
+
 				<div class="row-fluid">
 					<div class="span4" style="text-align:right">
 						<img src="img/time.png" width="64" />
@@ -250,7 +252,6 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 	<script src="js/jquery.notificationcenter.js"></script>
 	<script src="js/jquery.timer.js"></script>
 	<script src="js/prettify.js"></script>
-	<script src="http://localhost:8000/faye.js"></script>
 	<script>
 		var client = null;
 		$(document).ready(function(){
@@ -277,12 +278,15 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 					$('.timer').html(minutes+':'+sec);
 				}
 			}
-
+			var date = new Date();
 			$('body').notificationcenter({
 				types:[
 					{type:'gift',img:'img/gift.png', bgcolor:'#EB5D49', color:'#FFFFFF'},
 					{type:'calendar',img:'img/calendar.png', bgcolor:'#2767A8', color:'#FFFFFF'},
 					{type:'system',img:'img/settings.png', bgcolor:'#FFFFFF', color:'#2C3E50'}
+				],
+				default:[
+					{type:'gift', values:[{text:'This is an example', time:date.getTime()/1000}]}
 				]
 			});
 
@@ -297,15 +301,6 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 				$('body').notificationcenter('slide');
 			});
 
-
-			client = new Faye.Client('http://127.0.0.1:8000/faye', {
-				timeout: 120
-
-			});
-
-			client.subscribe('/messages', function(message){
-				$('body').notificationcenter('newAlert', message.text, message.type);
-			});
 		});
 
 

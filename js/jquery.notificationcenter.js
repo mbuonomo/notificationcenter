@@ -34,7 +34,9 @@
             toggleButton: "#notificationcentericon",
             addPanel : true,
             displayTime:5000,
-            types:[]
+            types:[],
+            counter:true,
+            default:[]
         };
 
     function inArray(needle, haystack) {
@@ -70,6 +72,32 @@
             $('body').prepend('<div id="'+id+'" class="notificationcentercontainer"></div>');
         }
 
+        $(this.options.toggleButton).addClass('notificationcentericon');
+
+        if (this.options.default.length > 0) {
+            var centerElm = this.options.centerElement;
+            var types = this.options.types;
+
+            $(this.options.default).each(function(index, item){
+                var type = item.type;
+                if($(centerElm+' .center'+type).length == 0){
+                    var index = inArray(type, types);
+                    if(index !== false){
+                        var bgcolor  = (typeof(types[index].bgcolor) == 'undefined')?'#FF00FF':types[index].bgcolor;
+                        var color  = (typeof(types[index].color) == 'undefined')?'#000000':types[index].color;
+                        $(centerElm).prepend('<div class="centerlist center'+type+'"><div class="centerheader" style="background-color:'+bgcolor+';color:'+color+';background-image:url('+types[index].img+')">'+types[index].type+'</div><ul></ul></div>');
+                    } else {
+                        $(centerElm).prepend('<div class="centerlist center'+type+'"><div class="centerheader"></div><ul></ul></div>');
+                    }
+                }
+
+                $(item.values).each(function(i,notif){
+                    $(centerElm+' .center'+type+' ul').prepend('<li><div class="notifcenterbox"><div class="closenotif">x</div>'+ notif.text +' '+'<br /><small data-livestamp="'+notif.time+'"></small></div></li>');
+
+                });
+            })
+        }
+
     };
 
     Plugin.prototype.createCenter = function(el, options) {
@@ -83,6 +111,9 @@
                 if($(this).hasClass('open')){
                     $(this).removeClass('open').addClass('close');
                     $('.notificationcentercontainer').animate({right:'+=300'}, 500);
+                    if(options.counter){
+                        $(options.toggleButton).removeAttr('data-counter');
+                    }
                 } else {
                     $(this).removeClass('close').addClass('open');
                     $('.notificationcentercontainer').animate({right:'-=300'}, 500);
@@ -98,6 +129,9 @@
             $(this.options.toggleButton).removeClass('close').addClass('open');
             $('.notificationcentercontainer').animate({right:'-=300'}, 500);
         }else{
+            if(this.options.counter){
+                $(this.options.toggleButton).removeAttr('data-counter');
+            }
             $(this.options.toggleButton).removeClass('open').addClass('close');
             $('.notificationcentercontainer').animate({right:'+=300'}, 500);
         }
@@ -126,8 +160,17 @@
 
             $('#box'+randomnumber).css({'right':'30px', 'position':'relative'}).fadeIn(500);
 
-
             setTimeout(function(){$('#box'+randomnumber).css('right', '-450px').fadeOut(500, function(){$(this).remove()});},this.options.displayTime);
+
+            if(this.options.counter){
+                if(typeof($(this.options.toggleButton).attr('data-counter')) == 'undefined'){
+                    $(this.options.toggleButton).attr('data-counter', 1);
+                }else{
+                    var counter = parseInt($(this.options.toggleButton).attr('data-counter'))+1;
+                    $(this.options.toggleButton).attr('data-counter', counter);
+                }
+            }
+
         }
         if($(this.options.centerElement+' .center'+type).length == 0){
             var index = inArray(type, this.options.types);
