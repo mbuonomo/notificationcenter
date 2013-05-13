@@ -144,7 +144,9 @@ $('body').notificationcenter({
             toggleButton: "#notificationcentericon",
             addPanel : true,
             displayTime:5000,
-            types:[]
+            types:[],
+            counter:true,
+            default:[]
         });
 &lt;/script&gt;</pre>
 				<table class="table table-bordered table-striped">
@@ -201,6 +203,30 @@ $('body').notificationcenter({
 	img:'img/gift.png', // icon path
 	bgcolor:'#EB5D49', // background color for the center header
 	color:'#FFFFFF' // text color for the center header
+},
+[...]
+	]
+});</pre>
+							</td>
+						</tr>
+						<tr>
+							<td>counter</td>
+							<td>boolean</td>
+							<td>true</td>
+							<td>Display a counter.</td>
+						</tr>
+						<tr>
+							<td>default</td>
+							<td>array</td>
+							<td>[]</td>
+							<td>
+					Array of objects to define the default notifications.
+					<pre class="prettyprint linenums">
+$('body').notificationcenter({
+	default:[
+{
+	type:'gift', // define the type
+	values:[{text:'This is an example', time:date.getTime()/1000}]
 },
 [...]
 	]
