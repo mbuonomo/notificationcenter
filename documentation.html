@@ -96,7 +96,7 @@
 					</p>
 				</blockquote>
 				<p>For example purpose we will shoot some notification via php using a curl request on the nodejs server every 15 minutes</p>
-				<small>For the moment it's a dummy countdown in javascript but it will be updated soon</small>
+				<small>Time before the next shoot :)</small>
 
 				<div class="row-fluid">
 					<div class="span4" style="text-align:right">
@@ -327,7 +327,6 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 				if(secondes == 0){
 					secondes = 900-<?php echo time()-intval(file_get_contents("last.txt"))?>;
 					$('body').notificationcenter('newAlert', 'This alert has been pushed from a php file via CuRl', 'system');
-
 				} else {
 					secondes--;
 					var minutes = Math.floor(secondes/60);
