@@ -146,7 +146,10 @@ $('body').notificationcenter({
             displayTime:5000,
             types:[],
             counter:true,
-            default:[]
+            default_notifs:[],
+            faye:false,
+            alert_hidden:true,
+            alert_hidden_sound:true
         });
 &lt;/script&gt;</pre>
 				<table class="table table-bordered table-striped">
@@ -216,14 +219,14 @@ $('body').notificationcenter({
 							<td>Display a counter.</td>
 						</tr>
 						<tr>
-							<td>default</td>
+							<td>default_notifs</td>
 							<td>array</td>
 							<td>[]</td>
 							<td>
 					Array of objects to define the default notifications.
 					<pre class="prettyprint linenums">
 $('body').notificationcenter({
-	default:[
+	default_notifs:[
 {
 	type:'gift', // define the type
 	values:[{text:'This is an example', time:date.getTime()/1000}]
@@ -231,6 +234,38 @@ $('body').notificationcenter({
 [...]
 	]
 });</pre>
+							</td>
+						</tr>
+						<tr>
+							<td>faye</td>
+							<td>object</td>
+							<td>false</td>
+							<td>
+					Object to define the faye connection.
+					<pre class="prettyprint linenums">
+$('body').notificationcenter({
+	faye:
+{
+	server:'http://yourserver:port'
+	chanel:'your chanel'
+}});</pre>
+							</td>
+						</tr>
+						<tr>
+							<td>alert_hidden</td>
+							<td>bool</td>
+							<td>true</td>
+							<td>
+								If you want to be alerted even if the page has not the focus.
+							</td>
+						</tr>
+						<tr>
+							<td>alert_hidden_sound</td>
+							<td>string</td>
+							<td>''</td>
+							<td>
+								Url of the audio file <strong>without the extension</strong>
+								You must provide the file in both format MP3/OGG
 							</td>
 						</tr>
 					</tbody>
@@ -267,7 +302,6 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 			<a href="#" class="btn" data-dismiss="modal">Close</a>
 		</div>
 	</div>
-
 	<!-- Le javascript
 	================================================== -->
 	<!-- Placed at the end of the document so the pages load faster -->
@@ -278,19 +312,20 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 	<script src="js/jquery.notificationcenter.js"></script>
 	<script src="js/jquery.timer.js"></script>
 	<script src="js/prettify.js"></script>
+	<script src="http://176.31.127.193:8000/faye/client.js"></script>
 	<script>
 		var client = null;
 		$(document).ready(function(){
 
 			window.prettyPrint && prettyPrint();
 
-			var secondes = 10;
+			var secondes = 900-<?php echo time()-intval(file_get_contents("last.txt"))?>;
 
 			var counter=setInterval(displayCountDown, 1000);
 
 			function displayCountDown(){
 				if(secondes == 0){
-					secondes = 900;
+					secondes = 900-<?php echo time()-intval(file_get_contents("last.txt"))?>;
 					$('body').notificationcenter('newAlert', 'This alert has been pushed from a php file via CuRl', 'system');
 
 				} else {
@@ -311,9 +346,14 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 					{type:'calendar',img:'img/calendar.png', bgcolor:'#2767A8', color:'#FFFFFF'},
 					{type:'system',img:'img/settings.png', bgcolor:'#FFFFFF', color:'#2C3E50'}
 				],
-				default:[
+				default_notifs:[
 					{type:'gift', values:[{text:'This is an example', time:date.getTime()/1000}]}
-				]
+				],
+				faye : {
+					server : 'http://176.31.127.193:8000/faye',
+					chanel : '/messages'
+				},
+				alert_hidden_sound: 'sounds/alert'
 			});
 
 			$('.notif').on('click', function(){
@@ -326,7 +366,6 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 				
 				$('body').notificationcenter('slide');
 			});
-
 		});
 
 

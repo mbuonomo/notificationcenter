@@ -21,34 +21,41 @@
  *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+; (function ($, window, document, undefined) {
 
-
-;(function ( $, window, document, undefined ) {
-
-    var current_notif = new Array();
-
-    var pluginName = "notificationcenter",
+    var current_notif = [],
+        pluginName = "notificationcenter",
         defaults = {
-            centerElement: "#notificationcenterpanel",
-            bodyElement: "#noticationcentermain",
-            toggleButton: "#notificationcentericon",
+            centerElement : "#notificationcenterpanel",
+            bodyElement : "#noticationcentermain",
+            toggleButton : "#notificationcentericon",
             addPanel : true,
-            displayTime:5000,
-            types:[],
-            counter:true,
-            default:[]
+            displayTime : 5000,
+            types : [],
+            counter : true,
+            default_notifs : [],
+            faye:false,
+            alert_hidden:true,
+            alert_hidden_sound:''
         };
 
     function inArray(needle, haystack) {
-        var length = haystack.length;
-
-        for(var i = 0; i < length; i++) {
-            if (haystack[i].type == needle) {
+        var length = haystack.length,
+            i = 0;
+        for (i; i < length; i+=1) {
+            if (haystack[i].type === needle) {
                 return i;
             }
         }
         return false;
     }
+
+    var hidden, visibilityChange;
+
+    function notification_changementVisibilite() {
+    }
+
+
 
     function Plugin( element, options ) {
         this.element = element;
@@ -74,17 +81,20 @@
 
         $(this.options.toggleButton).addClass('notificationcentericon');
 
-        if (this.options.default.length > 0) {
-            var centerElm = this.options.centerElement;
-            var types = this.options.types;
+        if (this.options.default_notifs.length > 0) {
+            var centerElm = this.options.centerElement,
+                types = this.options.types;
 
-            $(this.options.default).each(function(index, item){
+            $(this.options.default_notifs).each(function(index, item){
                 var type = item.type;
-                if($(centerElm+' .center'+type).length == 0){
-                    var index = inArray(type, types);
-                    if(index !== false){
-                        var bgcolor  = (typeof(types[index].bgcolor) == 'undefined')?'#FF00FF':types[index].bgcolor;
-                        var color  = (typeof(types[index].color) == 'undefined')?'#000000':types[index].color;
+
+                if($(centerElm+' .center'+type).length === 0){
+
+                    var i = inArray(type, types);
+
+                    if(i !== false){
+                        var bgcolor  = (types[i].bgcolor === undefined)?'#FF00FF':types[i].bgcolor,
+                            color  = (types[i].color === undefined)?'#000000':types[i].color;
                         $(centerElm).prepend('<div class="centerlist center'+type+'"><div class="centerheader" style="background-color:'+bgcolor+';color:'+color+';background-image:url('+types[index].img+')">'+types[index].type+'</div><ul></ul></div>');
                     } else {
                         $(centerElm).prepend('<div class="centerlist center'+type+'"><div class="centerheader"></div><ul></ul></div>');
@@ -95,8 +105,38 @@
                     $(centerElm+' .center'+type+' ul').prepend('<li><div class="notifcenterbox"><div class="closenotif">x</div>'+ notif.text +' '+'<br /><small data-livestamp="'+notif.time+'"></small></div></li>');
 
                 });
-            })
+            });
+
+            if (typeof document.hidden !== "undefined") {
+              hidden = "hidden";
+              visibilityChange = "visibilitychange";
+              visibilityState = "visibilityState";
+            } else if (typeof document.mozHidden !== "undefined") {
+              hidden = "mozHidden";
+              visibilityChange = "mozvisibilitychange";
+              visibilityState = "mozVisibilityState";
+            } else if (typeof document.msHidden !== "undefined") {
+              hidden = "msHidden";
+              visibilityChange = "msvisibilitychange";
+              visibilityState = "msVisibilityState";
+            } else if (typeof document.webkitHidden !== "undefined") {
+              hidden = "webkitHidden";
+              visibilityChange = "webkitvisibilitychange";
+              visibilityState = "webkitVisibilityState";
+            }
+            document.addEventListener(visibilityChange, notification_changementVisibilite, false);
+
+
         }
+
+        if (this.options.faye !== false) {
+
+            var client = new Faye.Client(this.options.faye.server);
+            var subscription = client.subscribe(this.options.faye.chanel, function(message) {
+                    $('body').notificationcenter('newAlert', message.text, message.type);
+            });            
+        }
+
 
     };
 
@@ -121,7 +161,7 @@
                 return false;
             });
 
-        };
+    };
 
     Plugin.prototype.slide = function(){
         var pos = parseInt($('.notificationcentercontainer').css('right'));
@@ -135,20 +175,20 @@
             $(this.options.toggleButton).removeClass('open').addClass('close');
             $('.notificationcentercontainer').animate({right:'+=300'}, 500);
         }
-    }
+    };
 
     Plugin.prototype.newAlert = function(text, type){
 
         if($(this.options.toggleButton).hasClass('open')) {
-            if ($('.notificationul').length == 0){
+            if ($('.notificationul').length === 0){
                 $('body').prepend('<ul class="notificationul"></ul>');
             }
 
-            var randomnumber=Math.floor(Math.random()*1199999);
+            var randomnumber = Math.floor(Math.random()*1199999),
+                index = inArray(type, this.options.types),
+                html = '';
             this.current_notif.push(randomnumber);
 
-            var index = inArray(type, this.options.types);
-            var html = '';
             if(index !== false){
     html = '<li id="box'+randomnumber+'"><div class="notification"><div class="closenotif">x</div><div class="iconnotif"><div class="iconnotifimg"><img src="'+this.options.types[index].img+'" /></div></div><div class="contentnotif">'+text+'</div></div></li>';
 
@@ -160,10 +200,14 @@
 
             $('#box'+randomnumber).css({'right':'30px', 'position':'relative'}).fadeIn(500);
 
-            setTimeout(function(){$('#box'+randomnumber).css('right', '-450px').fadeOut(500, function(){$(this).remove()});},this.options.displayTime);
+            window.setTimeout(function(){
+                    $('#box'+randomnumber).css('right', '-450px').fadeOut(500, function(){
+                        $(this).remove();
+                    });
+                },this.options.displayTime);
 
             if(this.options.counter){
-                if(typeof($(this.options.toggleButton).attr('data-counter')) == 'undefined'){
+                if($(this.options.toggleButton).attr('data-counter') === undefined){
                     $(this.options.toggleButton).attr('data-counter', 1);
                 }else{
                     var counter = parseInt($(this.options.toggleButton).attr('data-counter'))+1;
@@ -171,12 +215,26 @@
                 }
             }
 
+            if(this.options.alert_hidden && document[hidden]){
+                if (window.HTMLAudioElement) {
+                    var snd = new Audio('');
+                    
+                    if(snd.canPlayType('audio/ogg')) {
+                        snd = new Audio(this.options.alert_hidden_sound+'.ogg');
+                    }
+                    else if(snd.canPlayType('audio/mp3')) {
+                        snd = new Audio(this.options.alert_hidden_sound+'.mp3');
+                    }
+                    
+                    snd.play();
+                }
+            }
         }
-        if($(this.options.centerElement+' .center'+type).length == 0){
+        if($(this.options.centerElement+' .center'+type).length === 0){
             var index = inArray(type, this.options.types);
             if(index !== false){
-                var bgcolor  = (typeof(this.options.types[index].bgcolor) == 'undefined')?'#FF00FF':this.options.types[index].bgcolor;
-                var color  = (typeof(this.options.types[index].color) == 'undefined')?'#000000':this.options.types[index].color;
+                var bgcolor  = (this.options.types[index].bgcolor === undefined)?'#FF00FF':this.options.types[index].bgcolor;
+                var color  = (this.options.types[index].color === undefined)?'#000000':this.options.types[index].color;
                 $(this.options.centerElement).prepend('<div class="centerlist center'+type+'"><div class="centerheader" style="background-color:'+bgcolor+';color:'+color+';background-image:url('+this.options.types[index].img+')">'+this.options.types[index].type+'</div><ul></ul></div>');
             } else {
                 $(this.options.centerElement).prepend('<div class="centerlist center'+type+'"><div class="centerheader"></div><ul></ul></div>');
@@ -184,20 +242,21 @@
         }
 
         if(jQuery().livestamp){
-            var date = new Date();
-            var time = Math.round(date.getTime()/1000);
+            var date = new Date(),
+                time = Math.round(date.getTime()/1000);
             $(this.options.centerElement+' .center'+type+' ul').prepend('<li><div class="notifcenterbox"><div class="closenotif">x</div>'+ text +' '+'<br /><small data-livestamp="'+time+'"></small></div></li>');
         }else {
             $(this.options.centerElement+' .center'+type+' ul').prepend('<li><div class="notifcenterbox"><div class="closenotif">x</div>'+ text +' '+'<br /></div></li>');
         }
 
         $('.closenotif').on('click', function(){
-            $(this).parents('li').css('right', '-450px').fadeOut(500, function(){$(this).remove()});;
+            $(this).parents('li').css('right', '-450px').fadeOut(500, function(){$(this).remove();});
         });
 
-    }
+    };
 
     $.fn[pluginName] = function ( options ) {
+
         var args = arguments;
 
         if (options === undefined || typeof options === 'object') {
