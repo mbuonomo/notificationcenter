@@ -326,7 +326,7 @@ $('body').notificationcenter('newAlert', 'Sed posuere consectetur est at loborti
 			function displayCountDown(){
 				if(secondes == 0){
 					secondes = 900-<?php echo time()-intval(file_get_contents("last.txt"))?>;
-					$('body').notificationcenter('newAlert', 'This alert has been pushed from a php file via CuRl', 'system');
+//					$('body').notificationcenter('newAlert', 'This alert has been pushed from a php file via CuRl', 'system');
 				} else {
 					secondes--;
 					var minutes = Math.floor(secondes/60);
