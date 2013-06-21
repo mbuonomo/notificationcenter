@@ -33,6 +33,7 @@
             displayTime : 5000,
             types : [],
             counter : true,
+            title_counter: true,
             default_notifs : [],
             faye:false,
             alert_hidden:true,
@@ -153,6 +154,9 @@
                     $('.notificationcentercontainer').animate({right:'+=300'}, 500);
                     if(options.counter){
                         $(options.toggleButton).removeAttr('data-counter');
+                        if(options.title_counter) {
+                            document.title = document.title.replace(/^\([0-9]+\)/, '');
+                        }
                     }
                 } else {
                     $(this).removeClass('close').addClass('open');
@@ -206,12 +210,21 @@
                     });
                 },this.options.displayTime);
 
+            var title = document.title;
+            var til = title.replace(/^\([0-9]+\)/, '');
+
             if(this.options.counter){
                 if($(this.options.toggleButton).attr('data-counter') === undefined){
                     $(this.options.toggleButton).attr('data-counter', 1);
+                    if (this.options.title_counter){
+                        document.title = "(1) "+til;
+                    }
                 }else{
                     var counter = parseInt($(this.options.toggleButton).attr('data-counter'))+1;
                     $(this.options.toggleButton).attr('data-counter', counter);
+                    if (this.options.title_counter){
+                        document.title = "("+counter+") "+til;
+                    }
                 }
             }
 
@@ -250,7 +263,15 @@
         }
 
         $('.closenotif').on('click', function(){
-            $(this).parents('li').css('right', '-450px').fadeOut(500, function(){$(this).remove();});
+            $(this).parents('li').css('right', '-450px').fadeOut(500, function(){
+
+                if ($(this).parents('ul').find('li').length == 1) {
+                    $(this).parents('.centerlist').remove();
+                }
+
+                $(this).remove();
+
+            });
         });
 
     };
